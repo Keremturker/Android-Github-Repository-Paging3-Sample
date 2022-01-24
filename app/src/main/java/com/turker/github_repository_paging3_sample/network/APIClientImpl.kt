@@ -1,26 +1,29 @@
 package com.turker.github_repository_paging3_sample.network
 
+import android.content.Context
 import com.facebook.stetho.okhttp3.StethoInterceptor
 import com.google.gson.GsonBuilder
 import com.turker.github_repository_paging3_sample.BuildConfig
+import dagger.hilt.android.qualifiers.ApplicationContext
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 import javax.inject.Singleton
 
 
 const val CONNECTION_TIMEOUT_SEC = 5 * 60L
 
 interface APIClient {
-    val apiCollect: UserService
+    val apiCollect: RepoService
 }
 
 @Singleton
-class APIClientImpl : APIClient {
+class APIClientImpl  @Inject constructor(@ApplicationContext context: Context) : APIClient {
 
-    override val apiCollect: UserService by lazy {
-        clientCollect.create(UserService::class.java)
+    override val apiCollect: RepoService by lazy {
+        clientCollect.create(RepoService::class.java)
     }
 
     private val clientCollect: Retrofit by lazy {
@@ -50,7 +53,8 @@ class APIClientImpl : APIClient {
         val builder = OkHttpClient.Builder()
             .connectTimeout(CONNECTION_TIMEOUT_SEC, TimeUnit.SECONDS)
             .readTimeout(CONNECTION_TIMEOUT_SEC, TimeUnit.SECONDS)
-         stethoInterceptor?.let { builder.addNetworkInterceptor(it) }
+            .addInterceptor(NetworkConnectionInterceptor(context))
+        stethoInterceptor?.let { builder.addNetworkInterceptor(it) }
 
         builder
     }
